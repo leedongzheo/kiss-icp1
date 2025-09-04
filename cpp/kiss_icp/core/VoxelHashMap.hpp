@@ -54,5 +54,6 @@ struct VoxelHashMap {
     double max_distance_;
     unsigned int max_points_per_voxel_;
     tsl::robin_map<Voxel, std::vector<Eigen::Vector3d>> map_;
+    std::tuple<Eigen::Vector3d, std::vector<Eigen::Vector3d>, double>GetClosestNeighborAndNeighbors(const Eigen::Vector3d &query) const;
 };
 }  // namespace kiss_icp
