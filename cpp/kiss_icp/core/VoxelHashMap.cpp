@@ -128,6 +128,34 @@ void VoxelHashMap::RemovePointsFarFromLocation(const Eigen::Vector3d &origin) {
         } else {
             ++it;
         }
-    }
+    } 
 }
+std::tuple<Eigen::Vector3d, std::vector<Eigen::Vector3d>, double>
+VoxelHashMap::GetClosestNeighborAndNeighbors(const Eigen::Vector3d &query) const {
+     const auto &voxel = PointToVoxel(query, voxel_size_);
+     Eigen::Vector3d closest_neighbor = Eigen::Vector3d::Zero();
+     double closest_distance = std::numeric_limits<double>::max();
+     std::vector<Eigen::Vector3d> neighbors;
+
+     for (const auto &voxel_shift : voxel_shifts) {
+         const auto &query_voxel = voxel + voxel_shift;
+         auto search = map_.find(query_voxel);
+         if (search != map_.end()) {
+             const auto &points = search.value();
+             neighbors.insert(neighbors.end(), points.cbegin(), points.cend());
+             const Eigen::Vector3d &neighbor = *std::min_element(
+                 points.cbegin(), points.cend(),
+                 [&](const auto &lhs, const auto &rhs) {
+                     return (lhs - query).norm() < (rhs - query).norm();
+                 });
+             double distance = (neighbor - query).norm();
+             if (distance < closest_distance) {
+                 closest_neighbor = neighbor;
+                 closest_distance = distance;
+             }
+         }
+     }
+     return std::make_tuple(closest_neighbor, neighbors, closest_distance);
+ }
+
 }  // namespace kiss_icp
